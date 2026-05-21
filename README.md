@@ -70,3 +70,48 @@ npx wrangler deploy
 - Immediately rotate and remove any sensitive keys found in `.env.local`. Use Cloudflare secrets for runtime values instead of committing them to files.
 
 If you want, I can also add a short `deploy.md` with step-by-step CI instructions and example `wrangler` commands.
+
+## Ringkasan OCR / AI (singkat)
+
+- **Stack:** Next.js (App Router), TypeScript, Cloudflare Workers (OpenNext), D1 (SQLite), R2 (object storage), OpenRouter (vision/LLM API). UI menggunakan React + minimal server routes under `app/api`.
+- **Pendekatan OCR/AI:** gambar diunggah ke R2, file di-encode dan dikirim ke OpenRouter vision endpoint untuk ekstraksi teks/struktur; hasil AI disimpan di D1 sebagai `extraction` dan dipakai untuk menampilkan dan mengedit hasil di UI.
+- **Alasan pendekatan:** menggunakan OpenRouter (cloud API) untuk memanfaatkan model vision + LLM tanpa menjalankan beratnya model lokal; R2/D1 dipilih karena integrasi native dengan Cloudflare Workers dan biaya rendah untuk prototyping.
+
+## Asumsi yang Diambil
+
+- Pipeline mengandalkan ketersediaan `OPENROUTER_API_KEY` sebagai secret runtime (tidak disimpan di repo).
+- Dokumen utama bersifat gambar atau PDF yang dapat di-preview melalui endpoint `GET /api/file/[key]`.
+- Akurasi model vision/LLM tidak sempurna; UI harus memungkinkan verifikasi dan koreksi manual.
+
+## AI Workflow Log (tools / agent)
+
+- **Tool / Agent yang dipakai:**
+  - `OpenRouter` – model vision + LLM, dipanggil dari `lib/openrouter.ts` untuk ekstraksi teks dan struktur.
+  - `@opennextjs/cloudflare` (OpenNext) – untuk bundling Next.js ke Cloudflare Workers.
+  - `D1` & `R2` – penyimpanan ekstraksi dan file.
+  - `LocalStore` (fallback) – saat pengembangan tanpa Cloudflare.
+- **Peran singkat:**
+  - Upload: `app/api/upload/route.ts` menyimpan file ke R2, membuat row dokumen di D1, memanggil OpenRouter untuk ekstraksi dan menyimpan hasil.
+  - Preview: `app/api/file/[key]/route.ts` menyajikan object R2 ke browser.
+  - Admin/UI: halaman detail memungkinkan edit hasil ekstraksi.
+- **Prompt kunci (contoh, akan dibahas saat interview):**
+  - "Baca gambar ini dan ekstrak semua field berikut: [judul, tanggal, jumlah, baris item — format JSON yang mudah di-parse]. Berikan jawaban sebagai objek JSON dengan key kebih jelas, tanpa tambahan narasi."
+  - Catatan: prompt final disesuaikan di `lib/openrouter.ts` dan membutuhkan iterasi bersama tim saat interview.
+
+## Menangani Akurasi Rendah
+
+- Tampilkan hasil AI sebagai draft yang mudah diubah oleh pengguna (UI edit + simpan).
+- Simpan confidence/metadata dari model bila tersedia, tampilkan tag confidence untuk memprioritaskan verifikasi manual.
+- Terapkan fallback sederhana: bila confidence rendah, tunjukkan preview crop gambar pada bagian yang relevan untuk memudahkan user verifikasi.
+- Catat koreksi pengguna untuk membuat dataset kecil yang dapat dipakai untuk memperbaiki prompt atau melatih pemrosesan pasca-model (rule-based post-processing).
+
+## Jika Waktu Diperbanyak 2x — Rencana Perbaikan
+
+- Integrasi pipeline retraining / feedback loop: kumpulkan koreksi user, buat dataset terstruktur, dan gunakan fine-tuning atau prompt engineering yang sistematis.
+- Tambah pre-processing gambar: rotation correction, denoising, deskewing, konversi halaman PDF ke gambar berkualitas tinggi.
+- Ganti atau augment model vision dengan layanan khusus OCR (mis. Cloud Vision, Tesseract hybrid) untuk kasus tabel/format kompleks.
+- Tambah end-to-end tests dan metrik akurasi otomatis; dashboard feedback untuk melihat distribusi error dan prioritas perbaikan.
+
+---
+
+Jika Anda ingin, saya bisa memecah bagian tersebut ke `docs/ai.md` dan membuat `deploy.md` berisi contoh CI/CD (wrangler + opennext) langkah-demi-langkah.
