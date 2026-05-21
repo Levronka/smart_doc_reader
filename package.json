@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/compile-open-next-config.mjs",
+    "postbuild": "opennextjs-cloudflare build --skipNextBuild --skipWranglerConfigCheck",
     "start": "next start",
     "lint": "eslint"
   },
