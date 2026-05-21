@@ -47,7 +47,6 @@ export interface LocalStore {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __smartDocReaderLocalStore__: LocalStore | undefined;
 }
 

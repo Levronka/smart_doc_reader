@@ -1,4 +1,4 @@
-import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export interface CloudflareBindings {
   DB?: D1Database;
@@ -9,12 +9,7 @@ export interface CloudflareBindings {
 
 export function getCloudflareBindings() {
   try {
-    const context = getOptionalRequestContext<
-      IncomingRequestCfProperties,
-      ExecutionContext
-    >();
-
-    return context?.env as CloudflareBindings | undefined;
+    return getCloudflareContext().env as CloudflareBindings | undefined;
   } catch {
     return undefined;
   }
