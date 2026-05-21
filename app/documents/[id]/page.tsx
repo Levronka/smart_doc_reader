@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ExtractionForm from "@/components/ExtractionForm";
 import Link from "next/link";
-import Image from "next/image";
 
 interface DocumentDetail {
   id: string;
@@ -113,13 +112,10 @@ export default function DocumentDetailPage() {
             Document Preview
           </h2>
           {document.file_type === "image" ? (
-            <Image
+            <img
               src={`/api/file/${document.file_url}`}
               alt={document.filename}
-              width={1200}
-              height={900}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="h-auto w-full max-h-96 rounded-lg border object-contain"
+              className="w-full max-h-96 rounded-lg border object-contain"
             />
           ) : (
             <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg border">
