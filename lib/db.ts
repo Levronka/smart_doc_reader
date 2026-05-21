@@ -43,6 +43,31 @@ type AiField<T> =
   | null
   | undefined;
 
+interface AiLineItem {
+  name?: string | null;
+  quantity?: number | string | null;
+  unit_price?: number | string | null;
+  subtotal?: number | string | null;
+  confidence?: number | null;
+  conf?: number | null;
+}
+
+interface AiResult {
+  vendor_name?: AiField<string>;
+  vendor?: AiField<string>;
+  merchant_name?: AiField<string>;
+  date?: AiField<string>;
+  invoice_date?: AiField<string>;
+  total?: AiField<number | string>;
+  grand_total?: AiField<number | string>;
+  amount_total?: AiField<number | string>;
+  currency?: AiField<string>;
+  curr?: AiField<string>;
+  line_items?: AiLineItem[];
+  items?: AiLineItem[];
+  [key: string]: unknown;
+}
+
 function parseNumericValue(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -87,7 +112,7 @@ function normalizeNumberField(field: AiField<number | string>) {
   return { value: parseNumericValue(field), confidence: null };
 }
 
-function normalizeAiResult(aiResult: any) {
+function normalizeAiResult(aiResult: AiResult) {
   const vendor = normalizeTextField(
     aiResult.vendor_name ?? aiResult.vendor ?? aiResult.merchant_name,
   );
@@ -258,7 +283,7 @@ export async function updateDocumentStatus(
 export async function createExtraction(
   db: D1Database | null | undefined,
   documentId: string,
-  aiResult: any,
+  aiResult: AiResult,
 ) {
   const id = uuidv4();
   const now = new Date().toISOString();
@@ -284,13 +309,13 @@ export async function createExtraction(
 
     if (normalized.lineItems.length > 0) {
       const lineItems: LocalLineItemRow[] = normalized.lineItems.map(
-        (item: any) => ({
+        (item) => ({
           id: uuidv4(),
           extraction_id: id,
           name: item.name ?? null,
-          quantity: item.quantity ?? null,
-          unit_price: item.unit_price ?? null,
-          subtotal: item.subtotal ?? null,
+          quantity: parseNumericValue(item.quantity),
+          unit_price: parseNumericValue(item.unit_price),
+          subtotal: parseNumericValue(item.subtotal),
           conf: item.confidence ?? item.conf ?? null,
         }),
       );

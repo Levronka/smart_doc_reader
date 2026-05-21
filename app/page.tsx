@@ -23,7 +23,6 @@ export default function HomePage() {
   const [filterDate, setFilterDate] = useState("");
 
   const fetchDocuments = useCallback(async () => {
-    setIsLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterVendor) params.set("vendor", filterVendor);
@@ -40,7 +39,11 @@ export default function HomePage() {
   }, [filterVendor, filterDate]);
 
   useEffect(() => {
-    fetchDocuments();
+    const timeoutId = window.setTimeout(() => {
+      void fetchDocuments();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [fetchDocuments]);
 
   return (

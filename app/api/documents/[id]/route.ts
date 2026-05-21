@@ -14,11 +14,12 @@ interface CloudflareEnv {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const env = getCloudflareBindings() as CloudflareEnv | undefined;
-    const document = await getDocumentById(env?.DB, params.id);
+    const document = await getDocumentById(env?.DB, id);
 
     if (!document) {
       return NextResponse.json(
@@ -27,7 +28,7 @@ export async function GET(
       );
     }
 
-    const extraction = await getExtractionByDocumentId(env?.DB, params.id);
+    const extraction = await getExtractionByDocumentId(env?.DB, id);
 
     return NextResponse.json({ document, extraction });
   } catch (error) {
@@ -41,10 +42,20 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const env = getCloudflareBindings() as CloudflareEnv | undefined;
+    const document = await getDocumentById(env?.DB, id);
+
+    if (!document) {
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 },
+      );
+    }
+
     const body = (await request.json()) as {
       extraction_id: string;
       vendor_name: string;

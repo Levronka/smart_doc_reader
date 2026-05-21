@@ -3,7 +3,7 @@
     "types": ["@cloudflare/workers-types"],
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "strict": true,
     "skipLibCheck": true,
     "module": "ESNext",

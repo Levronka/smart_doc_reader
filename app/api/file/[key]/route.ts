@@ -10,11 +10,12 @@ interface CloudflareEnv {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { key: string } },
+  { params }: { params: Promise<{ key: string }> },
 ) {
   try {
+    const { key } = await params;
     const env = getCloudflareBindings() as CloudflareEnv | undefined;
-    const object = await getFromR2(env?.R2, params.key);
+    const object = await getFromR2(env?.R2, key);
 
     if (!object) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
